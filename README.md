@@ -3,6 +3,8 @@ A (very) unofficial way of getting Caffeine related data including stream chat.
 
 # Usage
 
+You can find the project on JitPack.
+
 ```java
 CaffeineProfile profile = new CaffeineProfile(username);
 profile.isValid(); // returns false if a user doesn't exist.
