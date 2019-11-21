@@ -9,9 +9,9 @@ You can find the project on JitPack.
 CaffeineProfile profile = new CaffeineProfile(username);
 profile.isValid(); // returns false if a user doesn't exist.
 
-EventListener listener = (new JsonListener() {
-@Override
-  public void onEvent(JSONObject json) {
+EventListener listener = (new ChatListener() {
+  @Override
+  public void onEvent(Chat chat) {
     // Code here, relies on the json-simple library.
   }
 })
