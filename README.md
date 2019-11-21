@@ -16,8 +16,8 @@ EventListener listener = (new JsonListener() {
   }
 })
 CaffeineStream stream = new CaffeineStream(profile, listener); // Automatically connects, if not an error is thrown.
-stream.close(); # Close.
-stream.isOpen(); # Is open, directly from the websocket api.
+stream.close(); // Close.
+stream.isOpen(); // Is open, directly from the websocket api.
 ```
 
 
