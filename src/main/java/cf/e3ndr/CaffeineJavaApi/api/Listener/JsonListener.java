@@ -1,4 +1,4 @@
-package cf.e3ndr.CaffeineJavaApi.api;
+package cf.e3ndr.CaffeineJavaApi.api.Listener;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

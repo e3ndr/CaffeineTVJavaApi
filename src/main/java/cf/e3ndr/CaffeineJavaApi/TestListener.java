@@ -1,14 +1,13 @@
 package cf.e3ndr.CaffeineJavaApi;
 
-import org.json.simple.JSONObject;
+import cf.e3ndr.CaffeineJavaApi.api.Chat.Chat;
+import cf.e3ndr.CaffeineJavaApi.api.Listener.ChatListener;
 
-import cf.e3ndr.CaffeineJavaApi.api.JsonListener;
-
-public class TestListener implements JsonListener {
+public class TestListener extends ChatListener {
 
 	@Override
-	public void onEvent(JSONObject json) {
-		System.out.println(json);
+	public void onEvent(Chat chat) {
+		System.out.println(chat);
 	}
 
 }

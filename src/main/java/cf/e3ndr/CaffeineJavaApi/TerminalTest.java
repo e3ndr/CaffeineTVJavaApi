@@ -6,9 +6,13 @@ import cf.e3ndr.CaffeineJavaApi.api.CaffeineStream;
 public class TerminalTest {
 
 	public static void main(String[] args) {
-		String username = "Jessiex";
+		String username = "thedungeonrun";
 		
-		if (args.length > 0) username = args[0];
+		if (args.length > 0) {
+			username = args[0];
+		} else {
+			System.out.println("Username not specified, using " + username + " for testing.");
+		}
 		
 		CaffeineProfile profile = new CaffeineProfile(username);
 		

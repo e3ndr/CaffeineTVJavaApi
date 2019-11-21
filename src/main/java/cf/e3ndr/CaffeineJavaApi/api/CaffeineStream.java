@@ -5,6 +5,8 @@ import java.net.URI;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
+import cf.e3ndr.CaffeineJavaApi.api.Listener.EventListener;
+
 public class CaffeineStream extends WebSocketClient {
 	private EventListener listener;
 	
@@ -12,10 +14,8 @@ public class CaffeineStream extends WebSocketClient {
 		super(new URI("wss://realtime.caffeine.tv/v2/reaper/stages/$stage-id/messages".replace("$stage-id", broadcaster.getStageId())));
 		
 		this.connectBlocking();
-		new KeepAlive(this).start();
-		
 		this.send("{\"Headers\":{\"Authorization\":\"Anonymous CTVJAPI\",\"X-Client-Type\":\"api\"}}");
-		this.send("\"HEALZ\"");
+		new KeepAlive(this).start();
 	}
 	
 	public CaffeineStream(CaffeineProfile broadcaster, EventListener listener) throws Exception {
@@ -33,8 +33,9 @@ public class CaffeineStream extends WebSocketClient {
 	
 	@Override
 	public void onMessage(String message) {
-		// System.out.println(message);
-		if (!message.equals("\"THANKS\"") && (this.listener != null)) {
+		if (message.contains("Status")) {
+			System.out.println(message);
+		} else if (!message.equals("\"THANKS\"") && (this.listener != null)) {
 			this.listener.onEvent(message);
 		}
 	}
