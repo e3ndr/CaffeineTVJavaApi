@@ -33,9 +33,7 @@ public class CaffeineStream extends WebSocketClient {
 	
 	@Override
 	public void onMessage(String message) {
-		if (message.contains("Status")) {
-			System.out.println(message);
-		} else if (!message.equals("\"THANKS\"") && (this.listener != null)) {
+		if (!message.equals("\"THANKS\"") && (this.listener != null)) {
 			this.listener.onEvent(message);
 		}
 	}
