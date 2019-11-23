@@ -5,11 +5,13 @@ import java.awt.Color;
 import java.awt.DisplayMode;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,10 +21,15 @@ import javax.swing.JCheckBox;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
-import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.border.BevelBorder;
 import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import javax.swing.plaf.basic.BasicInternalFrameUI;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
@@ -33,8 +40,6 @@ import cf.e3ndr.CaffeineJavaApi.api.CaffeineProfile;
 import cf.e3ndr.CaffeineJavaApi.api.CaffeineStream;
 import cf.e3ndr.CaffeineJavaApi.api.Chat.Chat;
 import cf.e3ndr.CaffeineJavaApi.api.Listener.ChatListener;
-import java.awt.GridLayout;
-import javax.swing.JTextField;
 
 public class Overlay extends ChatListener implements NativeKeyListener {
 	private static Overlay instance;
@@ -43,6 +48,7 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 	private JInternalFrame toolBar = new JInternalFrame();
 	private boolean visible = true;
 	private CaffeineStream stream;
+	private Color textColor = Color.BLACK;
 	
 	public static void main(String[] args) {
 		Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
@@ -110,19 +116,30 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 		
 		this.toolBar.setVisible(this.visible);
 		this.chatDisplay.setTitleBar(this.visible);
+		this.chatDisplay.repaint();
 		
 	}
 	
 	private void initToolBar(JDesktopPane pane) {
 		this.toolBar.setTitle("Toolbar");
-		this.toolBar.setBounds(750, 600, 500, 50);
+		this.toolBar.setBounds(750, 600, 700, 50);
 		this.toolBar.setFrameIcon(null);
 		this.toolBar.setResizable(true);
 		this.toolBar.setOpaque(false);
-		this.toolBar.getContentPane().setLayout(new GridLayout(0, 4, 0, 0));
+		this.toolBar.getContentPane().setLayout(new GridLayout(0, 5, 0, 0));
 		
 		JTextField caffeineStreamSelector = new JTextField();
-		caffeineStreamSelector.setText("Slatsss");
+		caffeineStreamSelector.setText("ItsGoGoGamer");
+		
+		JCheckBox darkText = new JCheckBox("Dark text");
+		darkText.setSelected(true);
+		darkText.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				textColor = darkText.isSelected() ? Color.BLACK : Color.WHITE;
+				darkText.setName(darkText.isSelected() ? "Dark text" : "Light Text");
+			}
+		});
 		
 		JButton btnChangeStream = new JButton("Change Stream");
 		btnChangeStream.addActionListener(new ActionListener() {
@@ -156,6 +173,7 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 		
 		this.toolBar.getContentPane().add(btnCloseUI);
 		this.toolBar.getContentPane().add(checkChatDisplay);
+		this.toolBar.getContentPane().add(darkText);
 		this.toolBar.getContentPane().add(caffeineStreamSelector);
 		this.toolBar.getContentPane().add(btnChangeStream);
 		
@@ -173,7 +191,30 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 	
 	@Override
 	public void onEvent(Chat chat) {
-		this.chatDisplay.textArea.setText(this.chatDisplay.textArea.getText() + chat.toString() + "\n");
+		StyledDocument doc = this.chatDisplay.textArea.getStyledDocument();
+		Style style = this.chatDisplay.style;
+		String username = chat.getSender().getUsername();
+		
+		Random rand = new Random();
+		Color randomColor = new Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat());
+		
+		try {
+			StyleConstants.setForeground(style, randomColor);
+			StyleConstants.setBold(style, true);
+			StyleConstants.setFontSize(style, 15);
+			doc.insertString(doc.getLength(), username, style);
+			StyleConstants.setBold(style, false);
+			StyleConstants.setFontSize(style, 13);
+			StyleConstants.setForeground(style, this.textColor);
+			doc.insertString(doc.getLength(), ": ", style);
+			// StyleConstants.setForeground(style, Color.WHITE);
+			doc.insertString(doc.getLength(), chat.getText(), style);
+			doc.insertString(doc.getLength(), "\n", style);
+			
+		} catch (BadLocationException e) {}
+		
+		// this.chatDisplay.textArea.setText(this.chatDisplay.textArea.getText() + chat.toString() + "\n");
+		
 		this.chatDisplay.repaint();
 		
 	}
@@ -201,8 +242,8 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 	
 } @SuppressWarnings("serial") class ChatDisplay extends JInternalFrame {
 	private BasicInternalFrameTitlePane title  = (BasicInternalFrameTitlePane) ((BasicInternalFrameUI) this.getUI()).getNorthPane();
-	JTextArea textArea = new JTextArea();
-	
+	JTextPane textArea = new JTextPane();
+	Style style;
 	
 	public ChatDisplay() {
 		super("Chat Display");
@@ -215,9 +256,8 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 		this.setBackground(new Color(0, 0, 0, 0));
 		this.setOpaque(false);
 		
+		this.style = this.textArea.addStyle("Chat", null);
 		this.textArea.setEditable(false);
-		this.textArea.setWrapStyleWord(true);
-		this.textArea.setLineWrap(true);
 		this.textArea.setBackground(new Color(0, 0, 0, 0));
 		this.textArea.setOpaque(false);
 		this.getContentPane().add(textArea, BorderLayout.SOUTH);
