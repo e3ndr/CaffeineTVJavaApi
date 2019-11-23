@@ -8,13 +8,14 @@ import org.java_websocket.handshake.ServerHandshake;
 import cf.e3ndr.CaffeineJavaApi.api.Listener.EventListener;
 
 public class CaffeineStream extends WebSocketClient {
+	private static final String loginHeader = "{\"Headers\":{\"Authorization\":\"Anonymous CaffeineTVJavaAPI\",\"X-Client-Type\":\"api\"}}";
 	private EventListener listener;
 	
 	public CaffeineStream(CaffeineProfile broadcaster) throws Exception {
 		super(new URI("wss://realtime.caffeine.tv/v2/reaper/stages/$stage-id/messages".replace("$stage-id", broadcaster.getStageId())));
 		
 		this.connectBlocking();
-		this.send("{\"Headers\":{\"Authorization\":\"Anonymous CTVJAPI\",\"X-Client-Type\":\"api\"}}");
+		this.send(loginHeader);
 		new KeepAlive(this).start();
 	}
 	

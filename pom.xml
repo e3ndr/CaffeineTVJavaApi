@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>cf.e3ndr</groupId>
-	<artifactId>CaffeineJavaApi</artifactId>
-	<version>3</version>
+	<artifactId>CaffeineTVJavaApi</artifactId>
+	<version>4</version>
 	
 	<build>
 		<plugins>
@@ -23,6 +23,12 @@
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
 			<version>1.1.1</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.1stleg</groupId>
+			<artifactId>jnativehook</artifactId>
+			<version>2.0.2</version>
 		</dependency>
 		
 		<dependency>
