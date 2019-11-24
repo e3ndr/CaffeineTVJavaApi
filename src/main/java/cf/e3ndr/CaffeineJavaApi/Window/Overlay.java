@@ -11,31 +11,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.imageio.ImageIO;
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
-import javax.swing.JLabel;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.border.BevelBorder;
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
-import javax.swing.plaf.basic.BasicInternalFrameUI;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
@@ -44,7 +28,6 @@ import org.jnativehook.keyboard.NativeKeyListener;
 
 import cf.e3ndr.CaffeineJavaApi.api.CaffeineProfile;
 import cf.e3ndr.CaffeineJavaApi.api.CaffeineStream;
-import cf.e3ndr.CaffeineJavaApi.api.Util;
 import cf.e3ndr.CaffeineJavaApi.api.Chat.Chat;
 import cf.e3ndr.CaffeineJavaApi.api.Chat.ChatType;
 import cf.e3ndr.CaffeineJavaApi.api.Listener.ChatListener;
@@ -60,6 +43,7 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 	private DonationDisplay donationDisplay = new DonationDisplay();
 	private boolean greenMode = false;
 	private JDesktopPane desktopPane = new JDesktopPane();
+	// private TopDonatorDisplay topDonatorDisplay = new TopDonatorDisplay();
 	
 	public static void main(String[] args) {
 		Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
@@ -163,7 +147,7 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 	}
 	
 	private void initToolBar(JDesktopPane pane) {
-		this.toolBar.setTitle("CaffeineTV Java Overlay v6");
+		this.toolBar.setTitle("CaffeineTV Java Overlay v7");
 		this.toolBar.setBounds(200, 600, 1000, 50);
 		this.toolBar.setFrameIcon(null);
 		this.toolBar.setResizable(true);
@@ -171,7 +155,7 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 		this.toolBar.getContentPane().setLayout(new GridLayout(0, 8, 0, 0));
 		
 		JTextField caffeineStreamSelector = new JTextField();
-		caffeineStreamSelector.setText("Slatsss");
+		caffeineStreamSelector.setText("ItzLcyx");
 		
 		JCheckBox darkText = new JCheckBox("Dark text");
 		darkText.setSelected(true);
@@ -179,7 +163,6 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				textColor = darkText.isSelected() ? Color.BLACK : Color.WHITE;
-				darkText.setText(darkText.isSelected() ? "Dark text" : "Light Text");
 			}
 		});
 		
@@ -188,8 +171,7 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (stream != null) stream.close();
-				chatDisplay.textArea.setText("");
-				
+					chatDisplay.textArea.setText("");
 				try {
 					stream = new CaffeineStream(new CaffeineProfile(caffeineStreamSelector.getText()), instance);
 				} catch (Exception ex) {}
@@ -253,17 +235,23 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 		this.donationDisplay.setOpaque(false);
 		this.donationDisplay.setVisible(true);
 		
+		// pane.add(this.topDonatorDisplay);
+		// this.topDonatorDisplay.setOpaque(false);
+		// this.topDonatorDisplay.setVisible(true);
+		
 	}
 	
 	@Override
 	public void onEvent(Chat chat) {
+		this.frame.repaint();
+		this.desktopPane.repaint();
+		
 		if (chat.getType() == ChatType.REACTION) {
 			this.chatDisplay.chat(chat, this.textColor, this.greenMode);
-			this.frame.repaint();
-			this.desktopPane.repaint();
 		} else {
+			// this.topDonatorDisplay.chat(chat, this.textColor, this.greenMode);
 			this.donationDisplay.chat(chat, this.textColor, this.greenMode);
-			this.frame.repaint();
+			
 		}
 	}
 	
@@ -287,128 +275,5 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 
 	@Override
 	public void nativeKeyTyped(NativeKeyEvent e) {}
-	
-} @SuppressWarnings("serial") class ChatDisplay extends JInternalFrame {
-	private BasicInternalFrameTitlePane title  = (BasicInternalFrameTitlePane) ((BasicInternalFrameUI) this.getUI()).getNorthPane();
-	JTextPane textArea = new JTextPane();
-	Style style;
-	
-	public ChatDisplay() {
-		super("Chat Display");
-		this.setResizable(true);
-		this.setBounds(500, 800, 150, 200);
-		this.remove(this.title);
-		this.setTitleBar(true);
-		this.setFrameIcon(null);
-		this.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED, new Color(0, 0, 0, 0), new Color(0, 0, 0, 0)));
-		this.setBackground(new Color(0, 0, 0, 0));
-		this.setOpaque(false);
-		
-		this.style = this.textArea.addStyle("Chat", null);
-		StyleConstants.setBold(this.style, true);
-		this.textArea.setEditable(false);
-		this.textArea.setOpaque(false);
-		this.add(this.textArea, BorderLayout.SOUTH);
-		
-	}
-	
-	public void chat(Chat chat, Color textColor, boolean greenMode) {
-		StyledDocument doc = this.textArea.getStyledDocument();
-		String username = chat.getSender().getUsername();
-		
-		Random rand = new Random();
-		Color randomColor = new Color(rand.nextFloat(), greenMode ? 0 : rand.nextFloat(), rand.nextFloat());
-		
-		try {
-			StyleConstants.setForeground(this.style, randomColor);
-			StyleConstants.setFontSize(this.style, 15);
-			doc.insertString(doc.getLength(), username, this.style);
-			StyleConstants.setFontSize(this.style, 12);
-			StyleConstants.setForeground(style, textColor);
-			doc.insertString(doc.getLength(), ": ", this.style);
-			doc.insertString(doc.getLength(), chat.getText(), this.style);
-			doc.insertString(doc.getLength(), "\n", this.style);
-			
-		} catch (BadLocationException e) {}
-		
-		this.textArea.repaint();
-		this.repaint();
-	}
-
-	public void setTitleBar(boolean show) {
-		if (show) {
-			this.add(this.title, BorderLayout.NORTH, 0);
-		} else {
-			this.remove(this.title);
-		}
-	}
-	
-} @SuppressWarnings("serial") class DonationDisplay extends JInternalFrame {
-	private BasicInternalFrameTitlePane title  = (BasicInternalFrameTitlePane) ((BasicInternalFrameUI) this.getUI()).getNorthPane();
-	private JTextPane textArea = new JTextPane();
-	private Style style;
-	private JLabel lbl = new JLabel();
-    
-	public DonationDisplay() {
-		super("Donation Display");
-		this.setResizable(true);
-		this.setBounds(500, 400, 200, 200);
-		this.remove(this.title);
-		this.setTitleBar(true);
-		this.setFrameIcon(null);
-		this.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED, new Color(0, 0, 0, 0), new Color(0, 0, 0, 0)));
-		this.setBackground(new Color(0, 0, 0, 0));
-		this.setOpaque(false);
-		
-		this.style = this.textArea.addStyle("Donation", null);
-		this.textArea.setEditable(false);
-		this.textArea.setOpaque(false);
-		
-		this.lbl.setOpaque(false);
-		
-		this.add(this.lbl, BorderLayout.CENTER);
-		this.add(this.textArea, BorderLayout.SOUTH);
-		
-	}
-	
-	public void chat(Chat chat, Color textColor, boolean greenMode) {
-		BufferedImage toPaint = Util.resizeImage(chat.getDigitalItem().getStaticBufferedImage(), lbl.getWidth(), lbl.getHeight());
-		StyledDocument doc = this.textArea.getStyledDocument();
-		String username = chat.getSender().getUsername();
-		Random rand = new Random();
-		Color randomColor = new Color(rand.nextFloat(), greenMode ? 0 : rand.nextFloat(), rand.nextFloat());
-		
-		try {
-			StyleConstants.setForeground(this.style, randomColor);
-			StyleConstants.setFontSize(this.style, 15);
-			doc.insertString(doc.getLength(), username, this.style);
-			StyleConstants.setFontSize(this.style, 12);
-			StyleConstants.setForeground(style, textColor);
-			doc.insertString(doc.getLength(), ": ", this.style);
-			doc.insertString(doc.getLength(), chat.getText(), this.style);
-		} catch (BadLocationException e) {}
-		
-		this.textArea.repaint();
-		this.repaint();
-		
-		this.lbl.setIcon(new ImageIcon(toPaint));
-		this.textArea.setText(chat.getSender().getUsername());
-		
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {}
-		
-		this.textArea.setText("");
-		this.lbl.setIcon(null);
-		this.repaint();
-	}
-
-	public void setTitleBar(boolean show) {
-		if (show) {
-			this.add(this.title, BorderLayout.NORTH, 0);
-		} else {
-			this.remove(this.title);
-		}
-	}
 	
 }
