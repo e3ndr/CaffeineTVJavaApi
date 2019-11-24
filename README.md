@@ -12,7 +12,7 @@ profile.isValid(); // returns false if a user doesn't exist.
 EventListener listener = (new ChatListener() {
   @Override
   public void onEvent(Chat chat) {
-    // Code here, relies on the json-simple library.
+    // Code here
   }
 })
 CaffeineStream stream = new CaffeineStream(profile, listener); // Automatically connects, if not an error is thrown.
