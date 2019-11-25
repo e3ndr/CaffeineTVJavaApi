@@ -11,6 +11,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,17 +35,29 @@ import cf.e3ndr.CaffeineJavaApi.api.Chat.ChatType;
 import cf.e3ndr.CaffeineJavaApi.api.Listener.ChatListener;
 
 public class Overlay extends ChatListener implements NativeKeyListener {
+	// Static instance, for better handling of the overlay
 	private static Overlay instance;
-	private JFrame frame = new JFrame("CaffeineTV Java Overlay");
-	private ChatDisplay chatDisplay = new ChatDisplay();
-	private JInternalFrame toolBar = new JInternalFrame();
-	private boolean visible = true;
+	
+	// Everything is public to allow the settings to be set and read
+	
+	// The "windows"
+	JFrame frame = new JFrame("CaffeineTV Java Overlay");
+	ChatDisplay chatDisplay = new ChatDisplay();
+	JInternalFrame toolBar = new JInternalFrame("CaffeineTV Java Overlay v8");
+	JDesktopPane desktopPane = new JDesktopPane();
+	DonationDisplay donationDisplay = new DonationDisplay();
+	// TopDonatorDisplay topDonatorDisplay = new TopDonatorDisplay();
+	JCheckBox checkChatDisplay = new JCheckBox("Chat Display");
+	JCheckBox checkDonationDisplay = new JCheckBox("Donation Display");
+	JCheckBox checkGreenMode = new JCheckBox("OBS mode");
+	JTextField caffeineStreamSelector = new JTextField();
+	
+	// Everything else
+	private OverlaySettings settings;
 	private CaffeineStream stream;
-	private Color textColor = Color.BLACK;
-	private DonationDisplay donationDisplay = new DonationDisplay();
-	private boolean greenMode = false;
-	private JDesktopPane desktopPane = new JDesktopPane();
-	// private TopDonatorDisplay topDonatorDisplay = new TopDonatorDisplay();
+	boolean visible = true;
+	boolean blackText = true;
+	Position greenModePosition;
 	
 	public static void main(String[] args) {
 		Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
@@ -53,7 +67,8 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 		try {
 			GlobalScreen.registerNativeHook();
 		}
-		catch (NativeHookException ex) {
+		catch (NativeHookException e) {
+			new ErrorDialog(e.getLocalizedMessage());
 			System.exit(1);
 		}
 
@@ -76,15 +91,37 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 
 	public Overlay() {
 		instance = this;
+		this.settings = new OverlaySettings(instance);
 		this.initialize();
 		this.frame.setVisible(true);
+		this.updateSettings(false);
 	}
 	
 	private void initialize() {
-		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		this.frame.setFocusable(false);
 		this.frame.setAlwaysOnTop(true);
-		this.updateSettings();
+		
+		this.frame.addWindowListener(new WindowListener() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				settings.exit(instance);
+				System.exit(0);
+			}
+			
+			@Override
+			public void windowOpened(WindowEvent e) {}
+			@Override
+			public void windowClosed(WindowEvent e) {}
+			@Override
+			public void windowIconified(WindowEvent e) {}
+			@Override
+			public void windowDeiconified(WindowEvent e) {}
+			@Override
+			public void windowActivated(WindowEvent e) {}
+			@Override
+			public void windowDeactivated(WindowEvent e) {}
+		});
 		
 		this.desktopPane.setOpaque(false);
 		this.desktopPane.setBackground(Color.GREEN);
@@ -106,19 +143,18 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 		
 	}
 	
-	private void updateSettings() {
-		if (this.greenMode) {
+	private void updateSettings(boolean update) {
+		if (this.checkGreenMode.isSelected()) {
 			this.frame.dispose();
 			this.frame.setBackground(Color.GREEN);
 			this.frame.setUndecorated(false);
 			this.frame.pack();
 			this.frame.setVisible(true);
-			this.frame.setBounds(100, 100, 1280, 720);
-			this.chatDisplay.setLocation(0, 0);
-			this.donationDisplay.setLocation(0, 0);
+			this.frame.setBounds(this.greenModePosition.x, this.greenModePosition.y, this.greenModePosition.w, this.greenModePosition.h);
 			this.desktopPane.setOpaque(true);
-			
 		} else {
+			if (update) this.greenModePosition = new Position(this.frame);
+			
 			int width = 0;
 			int height = 0;
 			int x = 0;
@@ -143,26 +179,23 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 			this.desktopPane.setOpaque(false);
 		}
 		
-		this.frame.setAlwaysOnTop(!this.greenMode);
+		this.toolBar.setBounds(100, (this.frame.getHeight() / 2) - 25, 1000, 50);
+		this.frame.setAlwaysOnTop(!this.checkGreenMode.isSelected());
 	}
 	
 	private void initToolBar(JDesktopPane pane) {
-		this.toolBar.setTitle("CaffeineTV Java Overlay v7");
 		this.toolBar.setBounds(200, 600, 1000, 50);
 		this.toolBar.setFrameIcon(null);
 		this.toolBar.setResizable(true);
 		this.toolBar.setOpaque(false);
 		this.toolBar.getContentPane().setLayout(new GridLayout(0, 8, 0, 0));
 		
-		JTextField caffeineStreamSelector = new JTextField();
-		caffeineStreamSelector.setText("ItzLcyx");
-		
 		JCheckBox darkText = new JCheckBox("Dark text");
-		darkText.setSelected(true);
+		darkText.setSelected(this.blackText);
 		darkText.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
-				textColor = darkText.isSelected() ? Color.BLACK : Color.WHITE;
+				blackText = darkText.isSelected();
 			}
 		});
 		
@@ -178,35 +211,37 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 			}
 		});
 		
-		JCheckBox checkChatDisplay = new JCheckBox("Chat Display");
-		checkChatDisplay.setSelected(true);
-		checkChatDisplay.addItemListener(new ItemListener() {
+		JButton btnExit = new JButton("Exit Overlay");
+		btnExit.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				settings.exit(instance);
+				System.exit(0);
+			}
+		});
+		
+		this.checkChatDisplay.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent arg0) {
 				chatDisplay.setVisible(checkChatDisplay.isSelected());
 			}
 		});
 		
-		JCheckBox checkDonationDisplay = new JCheckBox("Donation Display");
-		checkDonationDisplay.setSelected(true);
-		checkDonationDisplay.addItemListener(new ItemListener() {
+		this.checkDonationDisplay.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent arg0) {
 				donationDisplay.setVisible(checkDonationDisplay.isSelected());
 			}
 		});
 		
-		JCheckBox checkOBSMode = new JCheckBox("OBS mode");
-		checkOBSMode.setSelected(false);
-		checkOBSMode.addItemListener(new ItemListener() {
+		this.checkGreenMode.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent arg0) {
-				greenMode = checkOBSMode.isSelected();
-				updateSettings();
+				updateSettings(true);
 			}
 		});
 		
-		JButton btnCloseUI = new JButton("Close UI");
+		JButton btnCloseUI = new JButton("Hide UI");
 		btnCloseUI.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -220,7 +255,8 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 		this.toolBar.getContentPane().add(darkText);
 		this.toolBar.getContentPane().add(caffeineStreamSelector);
 		this.toolBar.getContentPane().add(btnChangeStream);
-		this.toolBar.getContentPane().add(checkOBSMode);
+		this.toolBar.getContentPane().add(checkGreenMode);
+		this.toolBar.getContentPane().add(btnExit);
 		
 		this.toolBar.setVisible(true);
 		pane.add(this.toolBar);
@@ -229,11 +265,11 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 	private void initDisplays(JDesktopPane pane) {
 		pane.add(this.chatDisplay);
 		this.chatDisplay.setOpaque(false);
-		this.chatDisplay.setVisible(true);
+		this.chatDisplay.setVisible(this.checkChatDisplay.isSelected());
 		
 		pane.add(this.donationDisplay);
 		this.donationDisplay.setOpaque(false);
-		this.donationDisplay.setVisible(true);
+		this.donationDisplay.setVisible(this.checkDonationDisplay.isSelected());
 		
 		// pane.add(this.topDonatorDisplay);
 		// this.topDonatorDisplay.setOpaque(false);
@@ -247,10 +283,10 @@ public class Overlay extends ChatListener implements NativeKeyListener {
 		this.desktopPane.repaint();
 		
 		if (chat.getType() == ChatType.REACTION) {
-			this.chatDisplay.chat(chat, this.textColor, this.greenMode);
+			this.chatDisplay.chat(chat, this.blackText ? Color.BLACK : Color.WHITE, this.checkGreenMode.isSelected());
 		} else {
 			// this.topDonatorDisplay.chat(chat, this.textColor, this.greenMode);
-			this.donationDisplay.chat(chat, this.textColor, this.greenMode);
+			this.donationDisplay.chat(chat, this.blackText ? Color.BLACK : Color.WHITE, this.checkGreenMode.isSelected());
 			
 		}
 	}

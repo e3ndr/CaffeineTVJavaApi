@@ -26,7 +26,6 @@ public class ChatDisplay extends JInternalFrame {
 	public ChatDisplay() {
 		super("Chat Display");
 		this.setResizable(true);
-		this.setBounds(500, 800, 150, 200);
 		this.remove(this.title);
 		this.setTitleBar(true);
 		this.setFrameIcon(null);
