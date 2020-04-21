@@ -1,8 +1,12 @@
 # CaffeineTVJavaApi
 A (very) unofficial way of getting Caffeine related data including stream chat.
 
-Overlay tutorial > https://youtu.be/slPz5U5XWjE
-
+**UPDATE**
+This project is long dead, swing is buggy and even then it doesn't work well with OBS.
+As an alternative you can use either [Casterlabs](https://casterlabs.co) (Runs more like classic streamlabs or maelstream) or [Caffeinated](https://github.com/thehelvijs/Caffeineated) (Runs locally).
+Thanks for your interest and I hope this repo atleast gives you some development knowledge on Caffeine.
+  
+  
 # Usage
 
 You can find the project on JitPack.
